@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clicker Szimulátor</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #282c34;
+            color: white;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            overflow-y: auto; /* Ha túl sok az elem, akkor görgethető lesz */
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .button {
+            font-size: 1.2rem;
+            padding: 15px 30px;
+            cursor: pointer;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            transition: transform 0.1s ease, background-color 0.3s;
+            margin: 10px;
+        }
+
+        .button:hover {
+            background-color: #ff1a1a;
+            transform: scale(1.05);
+        }
+
+        .button:active {
+            transform: scale(1);
+        }
+
+        .stats, .goal, .multiplier, .upgrade {
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .stats p, .multiplier p, .goal p, .upgrade p {
+            font-size: 1.2rem;
+        }
+
+        .goal-complete {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .button {
+                font-size: 1rem;
+                padding: 12px 25px;
+            }
+
+            .stats p, .goal p, .multiplier p, .upgrade p {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .button {
+                font-size: 0.9rem;
+                padding: 10px 20px;
+            }
+
+            .stats p, .goal p, .multiplier p, .upgrade p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Clicker Szimulátor</h1>
+        
+        <!-- Kattintó gomb -->
+        <button class="button" id="clickButton">Kattints!</button>
+        
+        <div class="stats">
+            <p>Erőforrások: <span id="resources">0</span></p>
+            <p>Kattintások: <span id="clickCount">0</span></p>
+            <p>Szint: <span id="level">1</span></p>
+            <p>Jelenlegi szorzó: <span id="multiplier">1</span></p>
+        </div>
+
+        <!-- Cél -->
+        <div class="goal">
+            <h2>Cél:</h2>
+            <p>Elérni: <span id="goalAmount">100</span> erőforrást</p>
+            <p id="goalStatus">Cél eléréséhez még: <span id="remainingGoal">100</span> erőforrás szükséges</p>
+        </div>
+
+        <!-- Szorzó vásárlás -->
+        <div class="multiplier">
+            <h2>Kattintás szorzó:</h2>
+            <p>Következő szorzó: <span id="nextMultiplierAt">50</span> kattintás</p>
+        </div>
+
+        <!-- Frissítés -->
+        <div class="upgrade">
+            <h2>Frissítés:</h2>
+            <p>Frissítés ára: <span id="upgradeCost">10</span> erőforrás</p>
+            <button class="button" id="upgradeButton">Vásárolj frissítést!</button>
+        </div>
+    </div>
+
+    <script>
+        let resources = 0;
+        let clickCount = 0;
+        let clickValue = 1;
+        let upgradeCost = 10;
+        let level = 1;
+        let multiplier = 1;
+        let nextMultiplierAt = 50;
+        let goalAmount = 100;
+        let goalCompleted = false;
+
+        // Kattintás funkció
+        document.getElementById("clickButton").addEventListener("click", function() {
+            clickCount++;
+            resources += clickValue * multiplier; // Kattintás szorzóval növelve
+            updateStats();
+
+            // Ha elérjük a következő szorzót
+            if (clickCount >= nextMultiplierAt) {
+                buyMultiplier();
+            }
+
+            // Ha elérjük a célt
+            if (resources >= goalAmount && !goalCompleted) {
+                completeGoal();
+            }
+        });
+
+        // Frissítés vásárlása
+        document.getElementById("upgradeButton").addEventListener("click", function() {
+            if (resources >= upgradeCost) {
+                resources -= upgradeCost;
+                clickValue *= 2; // A kattintás értéke megduplázódik
+                upgradeCost = Math.floor(upgradeCost * 1.5); // Frissítés ára növekszik
+                document.getElementById("upgradeCost").innerText = upgradeCost;
+                updateStats();
+            } else {
+                alert("Nincs elég erőforrásod a frissítéshez!");
+            }
+        });
+
+        // Szorzó vásárlása
+        function buyMultiplier() {
+            clickCount = 0;  // Kattintás számláló nullázása
+            multiplier++;  // Szorzó növelése
+            nextMultiplierAt = Math.floor(nextMultiplierAt * 1.5);  // Következő szorzóhoz szükséges kattintás növelése
+            document.getElementById("multiplier").innerText = multiplier;
+            document.getElementById("nextMultiplierAt").innerText = nextMultiplierAt;
+            alert("Új kattintás szorzó aktiválva!");
+        }
+
+        // Cél teljesítése
+        function completeGoal() {
+            goalCompleted = true;
+            document.getElementById("goalStatus").innerText = "Cél teljesítve!";
+            document.getElementById("goalAmount").innerText = "Cél teljesítve!";
+            document.getElementById("goalStatus").classList.add("goal-complete");
+            levelUp();
+        }
+
+        // Szintlépés
+        function levelUp() {
+            level++;
+            document.getElementById("level").innerText = level;
+            goalAmount = goalAmount * 2; // Következő cél értéke duplázódik
+            document.getElementById("goalAmount").innerText = goalAmount;
+            document.getElementById("goalStatus").innerText = `Cél eléréséhez még: ${goalAmount - resources} erőforrás szükséges`;
+            goalCompleted = false;
+            document.getElementById("goalStatus").classList.remove("goal-complete");
+        }
+
+        // Statisztikák frissítése
+        function updateStats() {
+            document.getElementById("resources").innerText = resources;
+            document.getElementById("clickCount").innerText = clickCount;
+            document.getElementById("remainingGoal").innerText = goalAmount - resources;
+        }
+    </script>
+</body>
+</html>
